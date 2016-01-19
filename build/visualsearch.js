@@ -32,7 +32,6 @@
       query       : '',
       autosearch  : true,
       unquotable  : [],
-      remainder   : 'text',
       showFacets  : true,
       readOnly    : false,
       callbacks   : {
@@ -1030,10 +1029,7 @@ VS.ui.SearchInput = Backbone.View.extend({
     return this;
   },
 
-  // Watches the input and presents an autocompleted menu, taking the
-  // remainder of the input field and adding a separate facet for it.
-  //
-  // See `addTextFacetRemainder` for explanation on how the remainder works.
+  // Watches the input and presents an autocompleted menu.
   setupAutocomplete : function() {
     this.box.autocomplete({
       minLength : this.options.showFacets ? 0 : 1,
@@ -1050,8 +1046,7 @@ VS.ui.SearchInput = Backbone.View.extend({
         e.preventDefault();
         // stopPropogation does weird things in jquery-ui 1.9
         // e.stopPropagation();
-        var remainder = this.addTextFacetRemainder(ui.item.label || ui.item.value);
-        var position  = this.options.position + (remainder ? 1 : 0);
+        var position  = this.options.position;
         this.app.searchBox.addFacet(ui.item instanceof String ? ui.item : ui.item.value, '', position);
         return false;
       }, this)
@@ -1084,8 +1079,7 @@ VS.ui.SearchInput = Backbone.View.extend({
   // `facetMatches` callback to skip any further ordering done client-side.
   autocompleteValues : function(req, resp) {
     var searchTerm = req.term;
-    var lastWord   = searchTerm.match(/\w+\*?$/); // Autocomplete only last word.
-    var re         = VS.utils.inflector.escapeRegExp(lastWord && lastWord[0] || '');
+    var re         = VS.utils.inflector.escapeRegExp(searchTerm || '');
     this.app.options.callbacks.facetMatches(function(prefixes, options) {
       options = options || {};
       prefixes = prefixes || [];
@@ -1146,30 +1140,6 @@ VS.ui.SearchInput = Backbone.View.extend({
         autocomplete.element.outerWidth()
       ));
     }
-  },
-
-  // If a user searches for "word word category", the category would be
-  // matched and autocompleted, and when selected, the "word word" would
-  // also be caught as the remainder and then added in its own facet.
-  addTextFacetRemainder : function(facetValue) {
-    var boxValue = this.box.val();
-    var lastWord = boxValue.match(/\b(\w+)$/);
-
-    if (!lastWord) {
-      return '';
-    }
-
-    var matcher = new RegExp(lastWord[0], "i");
-    if (facetValue.search(matcher) == 0) {
-      boxValue = boxValue.replace(/\b(\w+)$/, '');
-    }
-    boxValue = boxValue.replace('^\s+|\s+$', '');
-
-    if (boxValue) {
-      this.app.searchBox.addFacet(this.app.options.remainder, boxValue, this.options.position);
-    }
-
-    return boxValue;
   },
 
   // Directly called to focus the input. This is different from `addFocus`
@@ -1316,8 +1286,7 @@ VS.ui.SearchInput = Backbone.View.extend({
       });
       if (_.contains(labels, query)) {
         e.preventDefault();
-        var remainder = this.addTextFacetRemainder(query);
-        var position  = this.options.position + (remainder?1:0);
+        var position  = this.options.position;
         this.app.searchBox.addFacet(query, '', position);
         return false;
       }
@@ -1352,23 +1321,11 @@ VS.ui.SearchInput = Backbone.View.extend({
       e.preventDefault();
       this.app.searchBox.focusNextFacet(this, -1, {selectText: true});
     } else if (key == 'tab') {
-      var value = this.box.val();
-      if (value.length) {
-        e.preventDefault();
-        var remainder = this.addTextFacetRemainder(value);
-        var position  = this.options.position + (remainder?1:0);
-        if (value != remainder) {
-            this.app.searchBox.addFacet(value, '', position);
-        }
-      } else {
-        var foundFacet = this.app.searchBox.focusNextFacet(this, 0, {
-          skipToFacet: true,
-          selectText: true
-        });
-        if (foundFacet) {
-          e.preventDefault();
-        }
-      }
+      e.preventDefault();
+      this.app.searchBox.focusNextFacet(this, 0, {
+        skipToFacet: true,
+        selectText: true
+      });
     } else if (VS.app.hotkeys.command &&
                String.fromCharCode(e.which).toLowerCase() == 'a') {
       e.preventDefault();
@@ -1763,21 +1720,14 @@ VS.app.SearchParser = {
     var facets = [];
     var originalQuery = query;
     while (query) {
-      var category, value;
+      var category = null;
+      var value = null;
       originalQuery = query;
       var field = this._extractNextField(query);
-      if (!field) {
-        category = instance.options.remainder;
-        value    = this._extractSearchText(query);
-        query    = VS.utils.inflector.trim(query.replace(value, ''));
-      } else if (field.indexOf(':') != -1) {
+      if (field && field.indexOf(':') != -1) {
         category = field.match(this.CATEGORY)[1].replace(/(^['"]|['"]$)/g, '');
         value    = field.replace(this.CATEGORY, '').replace(/(^['"]|['"]$)/g, '');
         query    = VS.utils.inflector.trim(query.replace(field, ''));
-      } else if (field.indexOf(':') == -1) {
-        category = instance.options.remainder;
-        value    = field;
-        query    = VS.utils.inflector.trim(query.replace(value, ''));
       }
 
       if (category && value) {
@@ -1837,20 +1787,14 @@ VS.model.SearchFacet = Backbone.Model.extend({
   serialize : function() {
     var category = this.quoteCategory(this.get('category'));
     var value    = VS.utils.inflector.trim(this.get('value'));
-    var remainder = this.get("app").options.remainder;
 
     if (!value) return '';
 
-    if (!_.contains(this.get("app").options.unquotable || [], category) && category != remainder) {
+    if (!_.contains(this.get("app").options.unquotable || [], category)) {
       value = this.quoteValue(value);
     }
 
-    if (category != remainder) {
-      category = category + ': ';
-    } else {
-      category = "";
-    }
-    return category + value;
+    return category + ': ' + value;
   },
   
   // Wrap categories that have spaces or any kind of quote with opposite matching
