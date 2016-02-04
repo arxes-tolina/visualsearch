@@ -34,6 +34,7 @@
       unquotable  : [],
       showFacets  : true,
       readOnly    : false,
+      name        : 'VS-interface',
       callbacks   : {
         search          : $.noop,
         focus           : $.noop,
@@ -120,6 +121,7 @@ VS.ui.SearchBox = Backbone.View.extend({
     $(this.el).append(JST['search_box']({
       readOnly: this.app.options.readOnly
     }));
+    $(this.el).addClass(this.app.options.name + '-search-box');
     $(document.body).setMode('no', 'search');
 
     return this;
@@ -644,7 +646,7 @@ VS.ui.SearchFacet = Backbone.View.extend({
       }, this)
     });
 
-    this.box.autocomplete('widget').addClass('VS-interface');
+    this.box.autocomplete('widget').addClass('VS-interface').addClass(this.app.options.name + '-autocomplete-facet');
   },
 
   // As the facet's input field grows, it may move to the next line in the
@@ -1070,7 +1072,7 @@ VS.ui.SearchInput = Backbone.View.extend({
       }, this));
     };
 
-    this.box.autocomplete('widget').addClass('VS-interface');
+    this.box.autocomplete('widget').addClass('VS-interface').addClass(this.app.options.name + '-autocomplete-input');
   },
 
   // Search terms used in the autocomplete menu. The values are matched on the
