@@ -33,6 +33,7 @@
       autosearch  : true,
       unquotable  : [],
       showFacets  : true,
+      readOnlyFacets: false,
       readOnly    : false,
       name        : 'VS-interface',
       callbacks   : {
@@ -119,7 +120,8 @@ VS.ui.SearchBox = Backbone.View.extend({
   // Renders the search box, but requires placement on the page through `this.el`.
   render : function() {
     $(this.el).append(JST['search_box']({
-      readOnly: this.app.options.readOnly
+      readOnly: this.app.options.readOnly,
+      readOnlyFacets: this.app.options.readOnlyFacets
     }));
     $(this.el).addClass(this.app.options.name + '-search-box');
     $(document.body).setMode('no', 'search');
@@ -296,6 +298,7 @@ VS.ui.SearchBox = Backbone.View.extend({
   // allows third-party developers to either clear data asynchronously, or
   // prior to performing their custom "clear" logic.
   clearSearch : function(e) {
+    if (this.app.options.readOnlyFacets) return;
     if (this.app.options.readOnly) return;
     var actualClearSearch = _.bind(function() {
       this.disableFacets();
@@ -811,6 +814,7 @@ VS.ui.SearchFacet = Backbone.View.extend({
   // should delete this facet or just deselect it.
   selectFacet : function(e) {
     if (e) e.preventDefault();
+    if (this.app.options.readOnlyFacets) return;
     if (this.app.options.readOnly) return;
     var allSelected = this.app.searchBox.allSelected();
     if (this.modes.selected == 'is') return;
@@ -882,6 +886,7 @@ VS.ui.SearchFacet = Backbone.View.extend({
 
   // Deletes the facet and sends the cursor over to the nearest input field.
   remove : function(e) {
+    if (!this.app.options.readOnlyFacets) return;
     var committed = this.model.get('value');
     this.deselectFacet();
     this.disableEdit();
@@ -1034,7 +1039,7 @@ VS.ui.SearchInput = Backbone.View.extend({
   // Watches the input and presents an autocompleted menu.
   setupAutocomplete : function() {
     this.box.autocomplete({
-      minLength : this.options.showFacets ? 0 : 1,
+      minLength : (this.options.showFacets) ? 0 : 1,
       delay     : 50,
       autoFocus : true,
       position  : {offset : "0 -1"},
@@ -1216,6 +1221,7 @@ VS.ui.SearchInput = Backbone.View.extend({
   // `tripleClickTimer` is counting down, ready to be engaged and intercept
   // the click event to force a select all instead.
   maybeTripleClick : function(e) {
+    if (this.app.options.readOnlyFacets) return;
     if (this.app.options.readOnly) return;
     if (!!this.tripleClickTimer) {
       e.preventDefault();
@@ -1909,7 +1915,7 @@ VS.model.SearchQuery = Backbone.Collection.extend({
 (function(){
 window.JST = window.JST || {};
 
-window.JST['search_box'] = _.template('<div class="VS-search <% if (readOnly) { %>VS-readonly<% } %>">\n  <div class="VS-search-box-wrapper VS-search-box">\n    <div class="VS-icon VS-icon-search"></div>\n    <div class="VS-placeholder"></div>\n    <div class="VS-search-inner"></div>\n    <div class="VS-icon VS-icon-cancel VS-cancel-search-box" title="clear search"></div>\n  </div>\n</div>');
+window.JST['search_box'] = _.template('<div class="VS-search <% if (readOnly) { %>VS-readonly<% } %> <% if (readOnlyFacets) { %>VS-readonly-facets<% } %>">\n  <div class="VS-search-box-wrapper VS-search-box">\n    <div class="VS-icon VS-icon-search"></div>\n    <div class="VS-placeholder"></div>\n    <div class="VS-search-inner"></div>\n    <div class="VS-icon VS-icon-cancel VS-cancel-search-box" title="clear search"></div>\n  </div>\n</div>');
 window.JST['search_facet'] = _.template('<% if (model.has(\'category\')) { %>\n  <div class="category"><%- model.get(\'category\') %>:</div>\n<% } %>\n\n<div class="search_facet_input_container">\n  <input type="text" class="search_facet_input ui-menu VS-interface" value="" <% if (readOnly) { %>disabled="disabled"<% } %> />\n</div>\n\n<div class="search_facet_remove VS-icon VS-icon-cancel"></div>');
 window.JST['search_input'] = _.template('<input type="text" class="ui-menu" <% if (readOnly) { %>disabled="disabled"<% } %> />');
 })();

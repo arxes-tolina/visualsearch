@@ -140,6 +140,8 @@ Source: http://meyerweb.com/eric/thoughts/2007/05/01/reset-reloaded/
     position: absolute;
     right: 9px; top: 8px;
   }
+
+    .VS-search.VS-readonly-facets .VS-icon-cancel,
     .VS-search.VS-readonly .VS-icon-cancel {
       display: none;
     }
@@ -157,6 +159,7 @@ Source: http://meyerweb.com/eric/thoughts/2007/05/01/reset-reloaded/
   height: 20px;
   margin: 3px -3px 3px 0;
 }
+  .VS-search.VS-readonly-facets .search_facet,
   .VS-search.VS-readonly .search_facet {
     padding-left: 0;
   }
@@ -182,6 +185,7 @@ Source: http://meyerweb.com/eric/thoughts/2007/05/01/reset-reloaded/
     cursor: pointer;
     padding: 4px 0 0;
   }
+    .VS-search.VS-readonly-facets .search_facet .category,
     .VS-search.VS-readonly .search_facet .category {
       cursor: default;
     }
@@ -211,6 +215,7 @@ Source: http://meyerweb.com/eric/thoughts/2007/05/01/reset-reloaded/
   .VS-search .search_facet.is_selected input {
     color: #000;
   }
+  .VS-search.VS-readonly-facets .search_facet .search_facet_remove,
   .VS-search.VS-readonly .search_facet .search_facet_remove {
     display: none;
   }
