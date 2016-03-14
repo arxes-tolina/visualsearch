@@ -886,7 +886,7 @@ VS.ui.SearchFacet = Backbone.View.extend({
 
   // Deletes the facet and sends the cursor over to the nearest input field.
   remove : function(e) {
-    if (!this.app.options.readOnlyFacets) return;
+    if (this.app.options.readOnlyFacets) return;
     var committed = this.model.get('value');
     this.deselectFacet();
     this.disableEdit();
