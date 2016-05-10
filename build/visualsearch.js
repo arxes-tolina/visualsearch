@@ -33,6 +33,7 @@
       autosearch  : true,
       unquotable  : [],
       showFacets  : true,
+      customFacetValues: true,
       readOnlyFacets: false,
       readOnly    : false,
       name        : 'VS-interface',
@@ -578,7 +579,7 @@ VS.ui.SearchFacet = Backbone.View.extend({
   render : function() {
     $(this.el).html(JST['search_facet']({
       model : this.model,
-      readOnly: this.app.options.readOnly
+      readOnly: this.app.options.readOnly || !this.app.options.customFacetValues
     }));
 
     this.setMode('not', 'editing');
