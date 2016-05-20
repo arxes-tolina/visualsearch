@@ -3,7 +3,7 @@
 <% } %>
 
 <div class="search_facet_input_container">
-  <input type="text" class="search_facet_input ui-menu VS-interface" value="" <% if (readOnly) { %>disabled="disabled"<% } %> />
+  <input type="text" class="search_facet_input ui-menu VS-interface" value="" <% if (disabled) { %>disabled="disabled"<% } %> <% if (readOnly) { %>readOnly="readOnly"<% } %> />
 </div>
 
 <div class="search_facet_remove VS-icon VS-icon-cancel"></div>
