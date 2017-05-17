@@ -460,7 +460,13 @@ VS.ui.SearchBox = Backbone.View.extend({
     if ($(e.target).is('.VS-search-box') ||
         $(e.target).is('.VS-search-inner') ||
         e.type == 'keydown') {
-      this.focusSearch(e);
+      if (this.app.options.readOnlyFacets) {
+        _.defer(_.bind(function() {
+          this.app.searchBox.focusNextFacet(this.inputViews[0], 1);
+        }, this));
+      } else {
+        this.focusSearch(e);
+      }
     }
   },
 
